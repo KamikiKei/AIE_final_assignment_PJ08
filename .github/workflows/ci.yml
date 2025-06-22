@@ -1,0 +1,59 @@
+# .github/workflows/ci.yml
+
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest # GitHub Actions が提供する最新の Ubuntu 環境を使用
+    env:
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }} # ここでSecretsを環境変数として利用可能にする
+      
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4 # リポジトリのコードをチェックアウト
+
+    - name: Set up Python
+      uses: actions/setup-python@v5 # Python 環境をセットアップ
+      with:
+        python-version: '3.11' # プロジェクトで使用しているPythonのバージョンを指定
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip # pip を最新版にアップグレード
+        pip install -r requirements.txt      # プロジェクトの依存関係をインストール
+        pip install black flake8 mypy        # コード品質ツールをインストール
+
+    - name: Lint with Flake8
+      run: |
+        flake8 app/ --exclude venv,.git,__pycache__ # app ディレクトリ内のPythonファイルをチェック。除外設定は適宜調整
+
+    - name: Check code formatting with Black
+      run: |
+        black --check app/ # app ディレクトリ内のPythonファイルのフォーマットをチェック (変更がないか確認)
+
+    - name: Type Check with MyPy (Optional - requires type hints)
+      run: |
+        mypy app/ # app ディレクトリ内のPythonファイルの型ヒントをチェック。型ヒントが少ない場合は多くのエラーが出る可能性あり
+
+    - name: Run Tests
+      run: |
+        # このステップはテストコードが作成された後に有効化します
+        # pytest # pytest がインストールされていれば自動的にテストを発見し実行
+      # continue-on-error: true # テストが失敗してもCIを中断しない場合はコメントアウトを外す
+      
+    # Dockerイメージビルドのステップ (CDで実施することも可能)
+    # - name: Build Docker Image
+    #   if: github.ref == 'refs/heads/main' # main ブランチへのプッシュ時のみビルド
+    #   run: |
+    #     docker build -t your-dockerhub-username/comment-analysis-app:latest .
+    #     # Docker Hub などにプッシュする場合はログインとプッシュコマンドを追加
+    #     # echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login --username ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+    #     # docker push your-dockerhub-username/comment-analysis-app:latest
