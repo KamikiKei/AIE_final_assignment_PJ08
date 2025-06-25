@@ -17,11 +17,6 @@ venv/
 # Uploaded files
 uploads/
 
-# API Keys & Config
-# config.py 自体は共有するが、APIキーが直接書かれている場合は注意
-# 本番環境では環境変数を使うため、この行は通常不要
-# config.py # もし config.py に直接APIキーを記述している場合は追加を検討
-
 # Matplotlib cache
 .matplotlib/
 
